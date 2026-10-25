@@ -1,0 +1,217 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f4f6fb;
+  color: #252b3a;
+  font-family: Arial, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  background: #6554e8;
+  color: white;
+  border: none;
+  padding: 11px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.app-container {
+  width: min(1100px, 92%);
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  color: #6554e8;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-size: 12px;
+}
+
+.app-header h1 {
+  margin: 8px 0;
+  font-size: clamp(32px, 5vw, 46px);
+}
+
+.app-header > p:last-child {
+  color: #6b7280;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.form-panel,
+.books-panel {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 5px 25px rgba(30, 40, 80, 0.07);
+}
+
+.book-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.book-form h2,
+.section-heading h2 {
+  margin-top: 0;
+}
+
+.book-form label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.book-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d9deea;
+  border-radius: 8px;
+  outline-color: #6554e8;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form-actions button:last-child {
+  background: #e9ebf2;
+  color: #252b3a;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.book-count {
+  background: #eeebff;
+  color: #6554e8;
+  padding: 7px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.book-list {
+  display: grid;
+  gap: 14px;
+}
+
+.book-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #e6e9f1;
+  border-radius: 12px;
+}
+
+.book-card h3 {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.book-card p {
+  margin: 5px 0;
+  color: #60697b;
+}
+
+.book-id {
+  font-size: 12px;
+}
+
+.book-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.delete-button {
+  background: #dc4657;
+}
+
+.refresh-button {
+  margin-top: 20px;
+  background: #edf0f7;
+  color: #252b3a;
+}
+
+.success-message,
+.error-message {
+  padding: 13px 16px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+}
+
+.success-message {
+  background: #e1f7e9;
+  color: #176c39;
+}
+
+.error-message {
+  background: #ffebeb;
+  color: #a21d2d;
+}
+
+.dismiss-button {
+  margin-left: 12px;
+  padding: 6px 10px;
+  background: #a21d2d;
+}
+
+.app-footer {
+  text-align: center;
+  margin-top: 32px;
+  color: #7b8290;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .book-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .section-heading {
+    flex-wrap: wrap;
+  }
+}
