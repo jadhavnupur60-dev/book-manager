@@ -9,8 +9,9 @@ import BookList from "./components/BookList";
 import AddBook from "./components/AddBook";
 import EditBook from "./components/EditBook";
 
-const API_URL = "http://localhost:5000/api/books";
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
 
+const API_URL = `${API_BASE_URL}/api/books`;
 function App() {
   const [books, setBooks] = useState([]);
   const [searchResults, setSearchResults] = useState(null);

@@ -1,57 +1,84 @@
 # Book Manager
 
-## Project Description
-Book Manager is a full-stack web application for managing a personal collection of books. Users can view, add, edit, and delete books.
-
-## Technologies Used
-- React.js
-- Node.js
-- Express.js
-- HTML, CSS, and JavaScript
-- REST API
+Book Manager is a full-stack web application that helps users manage their personal book collection.
 
 ## Features
-- View all books
+
 - Add new books
+- View all books
 - Edit book details
 - Delete books
-- Refresh the book list
-- Display loading and error messages
+- Search books by title or author
+- Store book information in MongoDB Atlas
+
+## Technologies Used
+
+**Frontend:** React.js, HTML, CSS, JavaScript
+
+**Backend:** Node.js, Express.js
+
+**Database:** MongoDB Atlas, Mongoose
 
 ## Project Structure
-- `client/` — React frontend
-- `server/` — Express backend
 
-## API Endpoints
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/api/books` | Get all books |
-| GET | `/api/books/:id` | Get a book by ID |
-| POST | `/api/books` | Add a book |
-| PUT | `/api/books/:id` | Update a book |
-| DELETE | `/api/books/:id` | Delete a book |
+```text
+book-manager/
+│
+├── client/
+│   ├── public/
+│   ├── src/
+│   └── package.json
+│
+├── server/
+│   ├── server.js
+│   ├── package.json
+│   └── .env.example
+│
+├── .gitignore
+└── README.md
+```
 
-## How to Run
+## Installation and Setup
 
-### Start the backend
-```powershell
-cd "$HOME\OneDrive\book-manager\server"
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/jadhavnupur60-dev/book-manager.git
+cd book-manager
+```
+
+### 2. Install backend dependencies
+
+```bash
+cd server
+npm install
+```
+
+Create a `.env` file in the server folder and add your MongoDB Atlas connection string:
+
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_atlas_connection_string
+```
+
+### 3. Start the backend
+
+```bash
 npm start
 ```
 
-### Start the frontend in a second PowerShell window
-```powershell
-cd "$HOME\OneDrive\book-manager\client"
+### 4. Install frontend dependencies
+
+Open another terminal:
+
+```bash
+cd client
+npm install
 npm start
 ```
 
-Open `http://localhost:3000` in your browser.
-
-## Data Storage
-The current version stores books in memory. Data changes may be lost when the backend restarts.
+The frontend runs at `http://localhost:3000` and the backend runs at `http://localhost:5000`.
 
 ## Author
-Nupur Jadhav
 
-## GitHub Repository
-https://github.com/jadhavnupur60-dev/book-manager
+Nupur Jadhav
