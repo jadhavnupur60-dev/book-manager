@@ -17,21 +17,27 @@ function BookList({ books, loading, error, onEdit, onDelete }) {
   return (
     <div className="book-list">
       {books.map((book) => (
-        <div className="book-card" key={book.id}>
+        <div className="book-card" key={book._id}>
           <div>
             <h3>{book.title}</h3>
             <p>Author: {book.author}</p>
-            <p className="book-id">Book ID: {book.id}</p>
+            <p className="book-id">
+              Book ID: {book._id}
+            </p>
           </div>
 
           <div className="book-actions">
-            <button onClick={() => onEdit(book)}>
+            <button
+              type="button"
+              onClick={() => onEdit(book)}
+            >
               Edit
             </button>
 
             <button
+              type="button"
               className="delete-button"
-              onClick={() => onDelete(book.id)}
+              onClick={() => onDelete(book._id)}
             >
               Delete
             </button>

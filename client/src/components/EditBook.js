@@ -17,7 +17,7 @@ function EditBook({ book, onUpdate, onCancel, busy }) {
       return;
     }
 
-    await onUpdate(book.id, {
+    await onUpdate(book._id, {
       title: title.trim(),
       author: author.trim()
     });
@@ -33,6 +33,7 @@ function EditBook({ book, onUpdate, onCancel, busy }) {
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         required
+        maxLength={200}
       />
 
       <label htmlFor="edit-author">Author Name</label>
@@ -41,6 +42,7 @@ function EditBook({ book, onUpdate, onCancel, busy }) {
         value={author}
         onChange={(event) => setAuthor(event.target.value)}
         required
+        maxLength={120}
       />
 
       <div className="form-actions">

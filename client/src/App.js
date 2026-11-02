@@ -28,14 +28,20 @@ function App() {
 
   const visibleBooks = searchResults === null ? books : searchResults;
 
+  // Send the authorization header only when a token exists.
   const request = useCallback(async (url, options = {}) => {
+    const headers = {
+      "Content-Type": "application/json",
+      ...options.headers
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...options.headers
-      }
+      headers
     });
 
     const text = await response.text();
@@ -44,7 +50,9 @@ function App() {
     try {
       data = text ? JSON.parse(text) : null;
     } catch {
-      throw new Error("Server returned an invalid response. Please try again.");
+      throw new Error(
+        "Server returned an invalid response. Please try again."
+      );
     }
 
     if (!response.ok) {
@@ -54,6 +62,7 @@ function App() {
     return data;
   }, [token]);
 
+  // Load books
   const loadBooks = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -73,11 +82,17 @@ function App() {
   useEffect(() => {
     if (token) {
       loadBooks();
+    } else {
+      setBooks([]);
+      setSearchResults(null);
+      setLoading(false);
     }
   }, [token, loadBooks]);
 
+  // Search books
   async function handleSearch(event) {
     event.preventDefault();
+
     const query = searchTerm.trim();
 
     if (!query) {
@@ -94,6 +109,7 @@ function App() {
       const results = await request(
         `${API_URL}/search?q=${encodeURIComponent(query)}`
       );
+
       setSearchResults(Array.isArray(results) ? results : []);
     } catch (err) {
       setError(err.message || "Could not search books.");
@@ -103,6 +119,7 @@ function App() {
     }
   }
 
+  // Clear search
   function clearSearch() {
     setSearchTerm("");
     setSearchResults(null);
@@ -110,6 +127,7 @@ function App() {
     setMessage("");
   }
 
+  // Add book
   async function handleAdd(bookData) {
     setBusy(true);
     setError("");
@@ -125,6 +143,7 @@ function App() {
       setSearchResults(null);
       setSearchTerm("");
       setMessage("Book added successfully!");
+
       return true;
     } catch (err) {
       setError(err.message || "Could not add the book.");
@@ -134,6 +153,7 @@ function App() {
     }
   }
 
+  // Update book using MongoDB _id
   async function handleUpdate(id, bookData) {
     setBusy(true);
     setError("");
@@ -146,7 +166,9 @@ function App() {
       });
 
       setBooks((previous) =>
-        previous.map((book) => book.id === id ? updatedBook : book)
+        previous.map((book) =>
+          book._id === id ? updatedBook : book
+        )
       );
 
       setSearchResults(null);
@@ -160,6 +182,7 @@ function App() {
     }
   }
 
+  // Delete book using MongoDB _id
   async function handleDelete(id) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this book?"
@@ -172,19 +195,21 @@ function App() {
     setMessage("");
 
     try {
-      await request(`${API_URL}/${id}`, { method: "DELETE" });
+      await request(`${API_URL}/${id}`, {
+        method: "DELETE"
+      });
 
       setBooks((previous) =>
-        previous.filter((book) => book.id !== id)
+        previous.filter((book) => book._id !== id)
       );
 
       setSearchResults((previous) =>
         previous === null
           ? null
-          : previous.filter((book) => book.id !== id)
+          : previous.filter((book) => book._id !== id)
       );
 
-      if (editingBook?.id === id) {
+      if (editingBook?._id === id) {
         setEditingBook(null);
       }
 
@@ -196,6 +221,7 @@ function App() {
     }
   }
 
+  // Logout
   function handleLogout() {
     logout();
     setBooks([]);
@@ -203,6 +229,7 @@ function App() {
     setEditingBook(null);
     setError("");
     setMessage("");
+    setSearchTerm("");
   }
 
   return (
@@ -218,8 +245,12 @@ function App() {
       <main className="app-container">
         <header className="app-header">
           <p className="eyebrow">FULL-STACK PROJECT</p>
+
           <h1>Book Manager</h1>
-          <p>Manage your personal book collection in one place.</p>
+
+          <p>
+            Manage your personal book collection in one place.
+          </p>
 
           <p>
             Welcome, {user?.name || user?.email || "User"}!
@@ -239,7 +270,9 @@ function App() {
         {error && (
           <div className="error-message" role="alert">
             {error}
+
             <button
+              type="button"
               className="dismiss-button"
               onClick={() => setError("")}
             >
@@ -258,19 +291,26 @@ function App() {
                 busy={busy}
               />
             ) : (
-              <AddBook onAdd={handleAdd} busy={busy} />
+              <AddBook
+                onAdd={handleAdd}
+                busy={busy}
+              />
             )}
           </div>
 
           <div className="books-panel">
             <div className="section-heading">
               <h2>My Books</h2>
+
               <span className="book-count">
                 {visibleBooks.length} books
               </span>
             </div>
 
-            <form className="search-form" onSubmit={handleSearch}>
+            <form
+              className="search-form"
+              onSubmit={handleSearch}
+            >
               <label htmlFor="book-search">
                 Search by book title or author
               </label>
@@ -279,7 +319,9 @@ function App() {
                 id="book-search"
                 type="search"
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
                 placeholder="Search books or authors"
               />
 
@@ -314,6 +356,7 @@ function App() {
 
             {!loading && (
               <button
+                type="button"
                 className="refresh-button"
                 onClick={loadBooks}
                 disabled={busy}

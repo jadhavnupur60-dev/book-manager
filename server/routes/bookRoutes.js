@@ -1,24 +1,29 @@
+
 const express = require("express");
+const mongoose = require("mongoose");
 const Book = require("../models/Book");
 
 const router = express.Router();
 
-// Get books belonging to logged-in user
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Get all books belonging to the logged-in user
 router.get("/", async (req, res) => {
   try {
     const books = await Book.find({
       user: req.user.id
-    }).sort({ id: 1 });
+    }).sort({ createdAt: -1 });
 
     res.json(books);
   } catch (error) {
-    res.status(500).json({
-      error: "Unable to fetch books."
-    });
+    console.error("Fetch books error:", error);
+    res.status(500).json({ error: "Unable to fetch books." });
   }
 });
 
-// Search books
+// Search books by title or author
 router.get("/search", async (req, res) => {
   try {
     const q = String(req.query.q || "").trim();
@@ -29,23 +34,24 @@ router.get("/search", async (req, res) => {
       });
     }
 
+    const searchPattern = escapeRegex(q);
+
     const books = await Book.find({
       user: req.user.id,
       $or: [
-        { title: { $regex: q, $options: "i" } },
-        { author: { $regex: q, $options: "i" } }
+        { title: { $regex: searchPattern, $options: "i" } },
+        { author: { $regex: searchPattern, $options: "i" } }
       ]
-    }).sort({ id: 1 });
+    }).sort({ createdAt: -1 });
 
     res.json(books);
   } catch (error) {
-    res.status(500).json({
-      error: "Search failed."
-    });
+    console.error("Search books error:", error);
+    res.status(500).json({ error: "Search failed." });
   }
 });
 
-// Add book
+// Add a new book
 router.post("/", async (req, res) => {
   try {
     const title = req.body.title?.trim();
@@ -57,13 +63,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const latestBook = await Book.findOne()
-      .sort({ id: -1 });
-
-    const nextId = latestBook ? latestBook.id + 1 : 1;
-
     const book = await Book.create({
-      id: nextId,
       title,
       author,
       user: req.user.id
@@ -71,19 +71,21 @@ router.post("/", async (req, res) => {
 
     res.status(201).json(book);
   } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Unable to add book."
-    });
+    console.error("Add book error:", error);
+    res.status(500).json({ error: "Unable to add book." });
   }
 });
 
-// Update book
+// Update a book
 router.put("/:id", async (req, res) => {
   try {
+    const { id } = req.params;
     const title = req.body.title?.trim();
     const author = req.body.author?.trim();
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid book ID." });
+    }
 
     if (!title || !author) {
       return res.status(400).json({
@@ -92,52 +94,44 @@ router.put("/:id", async (req, res) => {
     }
 
     const book = await Book.findOneAndUpdate(
-      {
-        id: Number(req.params.id),
-        user: req.user.id
-      },
+      { _id: id, user: req.user.id },
       { title, author },
-      {
-        new: true,
-        runValidators: true
-      }
+      { new: true, runValidators: true }
     );
 
     if (!book) {
-      return res.status(404).json({
-        error: "Book not found."
-      });
+      return res.status(404).json({ error: "Book not found." });
     }
 
     res.json(book);
   } catch (error) {
-    res.status(500).json({
-      error: "Unable to update book."
-    });
+    console.error("Update book error:", error);
+    res.status(500).json({ error: "Unable to update book." });
   }
 });
 
-// Delete book
+// Delete a book
 router.delete("/:id", async (req, res) => {
   try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid book ID." });
+    }
+
     const book = await Book.findOneAndDelete({
-      id: Number(req.params.id),
+      _id: id,
       user: req.user.id
     });
 
     if (!book) {
-      return res.status(404).json({
-        error: "Book not found."
-      });
+      return res.status(404).json({ error: "Book not found." });
     }
 
-    res.json({
-      message: "Book deleted successfully."
-    });
+    res.json({ message: "Book deleted successfully." });
   } catch (error) {
-    res.status(500).json({
-      error: "Unable to delete book."
-    });
+    console.error("Delete book error:", error);
+    res.status(500).json({ error: "Unable to delete book." });
   }
 });
 
