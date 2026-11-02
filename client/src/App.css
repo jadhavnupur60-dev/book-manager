@@ -215,3 +215,29 @@ button:disabled {
     flex-wrap: wrap;
   }
 }
+
+.auth-panel {
+  max-width: 480px;
+  margin: 30px auto;
+  padding: 30px;
+}
+
+.auth-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-panel input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.auth-panel button {
+  cursor: pointer;
+}
+
+.auth-panel p {
+  margin-top: 18px;
+}

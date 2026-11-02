@@ -1,18 +1,22 @@
-import React, {
-  useCallback,
-  useEffect,
-  useState
-} from "react";
+
+import React, { useCallback, useEffect, useState } from "react";
 
 import "./App.css";
 import BookList from "./components/BookList";
 import AddBook from "./components/AddBook";
 import EditBook from "./components/EditBook";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ProtectedRoute from "./ProtectedRoute";
+import { useAuth } from "./context/AuthContext";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-
 const API_URL = `${API_BASE_URL}/api/books`;
+
 function App() {
+  const { token, user, logout } = useAuth();
+
+  const [showRegister, setShowRegister] = useState(false);
   const [books, setBooks] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,18 +33,26 @@ function App() {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
         ...options.headers
       }
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      throw new Error("Server returned an invalid response. Please try again.");
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || "Something went wrong");
+      throw new Error(data?.error || "Something went wrong.");
     }
 
     return data;
-  }, []);
+  }, [token]);
 
   const loadBooks = useCallback(async () => {
     setLoading(true);
@@ -50,7 +62,7 @@ function App() {
 
     try {
       const data = await request(API_URL);
-      setBooks(data);
+      setBooks(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || "Could not load books.");
     } finally {
@@ -59,8 +71,10 @@ function App() {
   }, [request]);
 
   useEffect(() => {
-    loadBooks();
-  }, [loadBooks]);
+    if (token) {
+      loadBooks();
+    }
+  }, [token, loadBooks]);
 
   async function handleSearch(event) {
     event.preventDefault();
@@ -80,7 +94,7 @@ function App() {
       const results = await request(
         `${API_URL}/search?q=${encodeURIComponent(query)}`
       );
-      setSearchResults(results);
+      setSearchResults(Array.isArray(results) ? results : []);
     } catch (err) {
       setError(err.message || "Could not search books.");
       setSearchResults([]);
@@ -132,9 +146,7 @@ function App() {
       });
 
       setBooks((previous) =>
-        previous.map((book) =>
-          book.id === id ? updatedBook : book
-        )
+        previous.map((book) => book.id === id ? updatedBook : book)
       );
 
       setSearchResults(null);
@@ -160,9 +172,7 @@ function App() {
     setMessage("");
 
     try {
-      await request(`${API_URL}/${id}`, {
-        method: "DELETE"
-      });
+      await request(`${API_URL}/${id}`, { method: "DELETE" });
 
       setBooks((previous) =>
         previous.filter((book) => book.id !== id)
@@ -186,114 +196,139 @@ function App() {
     }
   }
 
+  function handleLogout() {
+    logout();
+    setBooks([]);
+    setSearchResults(null);
+    setEditingBook(null);
+    setError("");
+    setMessage("");
+  }
+
   return (
-    <main className="app-container">
-      <header className="app-header">
-        <p className="eyebrow">FULL-STACK PROJECT</p>
-        <h1>Book Manager</h1>
-        <p>
-          Manage your personal book collection in one place.
-        </p>
-      </header>
+    <ProtectedRoute
+      fallback={
+        showRegister ? (
+          <Register onSwitch={() => setShowRegister(false)} />
+        ) : (
+          <Login onSwitch={() => setShowRegister(true)} />
+        )
+      }
+    >
+      <main className="app-container">
+        <header className="app-header">
+          <p className="eyebrow">FULL-STACK PROJECT</p>
+          <h1>Book Manager</h1>
+          <p>Manage your personal book collection in one place.</p>
 
-      {message && (
-        <p className="success-message" role="status">
-          {message}
-        </p>
-      )}
+          <p>
+            Welcome, {user?.name || user?.email || "User"}!
+          </p>
 
-      {error && (
-        <div className="error-message" role="alert">
-          {error}
-          <button
-            className="dismiss-button"
-            onClick={() => setError("")}
-          >
-            Dismiss
+          <button type="button" onClick={handleLogout}>
+            Logout
           </button>
-        </div>
-      )}
+        </header>
 
-      <section className="content-grid">
-        <div className="form-panel">
-          {editingBook ? (
-            <EditBook
-              book={editingBook}
-              onUpdate={handleUpdate}
-              onCancel={() => setEditingBook(null)}
-              busy={busy}
-            />
-          ) : (
-            <AddBook onAdd={handleAdd} busy={busy} />
-          )}
-        </div>
+        {message && (
+          <p className="success-message" role="status">
+            {message}
+          </p>
+        )}
 
-        <div className="books-panel">
-          <div className="section-heading">
-            <h2>My Books</h2>
-            <span className="book-count">
-              {visibleBooks.length} books
-            </span>
+        {error && (
+          <div className="error-message" role="alert">
+            {error}
+            <button
+              className="dismiss-button"
+              onClick={() => setError("")}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        <section className="content-grid">
+          <div className="form-panel">
+            {editingBook ? (
+              <EditBook
+                book={editingBook}
+                onUpdate={handleUpdate}
+                onCancel={() => setEditingBook(null)}
+                busy={busy}
+              />
+            ) : (
+              <AddBook onAdd={handleAdd} busy={busy} />
+            )}
           </div>
 
-          <form className="search-form" onSubmit={handleSearch}>
-            <label htmlFor="book-search">
-              Search by book title or author
-            </label>
+          <div className="books-panel">
+            <div className="section-heading">
+              <h2>My Books</h2>
+              <span className="book-count">
+                {visibleBooks.length} books
+              </span>
+            </div>
 
-            <input
-              id="book-search"
-              type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Try The Alchemist or Paulo Coelho"
+            <form className="search-form" onSubmit={handleSearch}>
+              <label htmlFor="book-search">
+                Search by book title or author
+              </label>
+
+              <input
+                id="book-search"
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search books or authors"
+              />
+
+              <div className="form-actions">
+                <button type="submit" disabled={loading}>
+                  Search
+                </button>
+
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  disabled={loading && searchResults === null}
+                >
+                  Clear Search
+                </button>
+              </div>
+            </form>
+
+            {searchResults !== null && (
+              <p role="status">
+                Showing search results for "{searchTerm}"
+              </p>
+            )}
+
+            <BookList
+              books={visibleBooks}
+              loading={loading}
+              error=""
+              onEdit={setEditingBook}
+              onDelete={handleDelete}
             />
 
-            <div className="form-actions">
-              <button type="submit" disabled={loading}>
-                Search
-              </button>
-
+            {!loading && (
               <button
-                type="button"
-                onClick={clearSearch}
-                disabled={loading && searchResults === null}
+                className="refresh-button"
+                onClick={loadBooks}
+                disabled={busy}
               >
-                Clear Search
+                Refresh Books
               </button>
-            </div>
-          </form>
+            )}
+          </div>
+        </section>
 
-          {searchResults !== null && (
-            <p role="status">
-              Showing search results for "{searchTerm}"
-            </p>
-          )}
-
-          <BookList
-            books={visibleBooks}
-            loading={loading}
-            error=""
-            onEdit={setEditingBook}
-            onDelete={handleDelete}
-          />
-
-          {!loading && (
-            <button
-              className="refresh-button"
-              onClick={loadBooks}
-              disabled={busy}
-            >
-              Refresh Books
-            </button>
-          )}
-        </div>
-      </section>
-
-      <footer className="app-footer">
-        Built with React, Express, and MongoDB Atlas
-      </footer>
-    </main>
+        <footer className="app-footer">
+          Built with React, Express, and MongoDB Atlas
+        </footer>
+      </main>
+    </ProtectedRoute>
   );
 }
 
